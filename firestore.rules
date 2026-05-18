@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation Blueprints
+    function isValidUser(data) {
+      return data.language in ['en', 'kn'] &&
+             data.rates is map &&
+             data.rates.brick is number && data.rates.brick >= 0 &&
+             data.rates.cement is number && data.rates.cement >= 0 &&
+             data.rates.sand is number && data.rates.sand >= 0 &&
+             (data.displayName == null || (data.displayName is string && data.displayName.size() <= 100)) &&
+             data.keys().hasAll(['language', 'rates']);
+    }
+
+    function isValidSite(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.address is string && data.address.size() <= 200 &&
+             data.ownerId == request.auth.uid &&
+             data.createdAt is string && // In simple form, or timestamp
+             data.keys().hasAll(['name', 'address', 'ownerId', 'createdAt']) && data.keys().size() == 4;
+    }
+
+    function isValidLaborer(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.dailyRate is number && data.dailyRate >= 0 &&
+             data.ownerId == request.auth.uid &&
+             data.keys().hasAll(['name', 'dailyRate', 'ownerId']) && data.keys().size() == 3;
+    }
+
+    function isValidAttendanceLog(data) {
+      return isValidId(data.laborerId) &&
+             isValidId(data.siteId) &&
+             data.date is string && data.date.size() == 10 &&
+             data.isPresent is bool &&
+             data.advancePaid is number && data.advancePaid >= 0 &&
+             data.ownerId == request.auth.uid &&
+             data.keys().hasAll(['laborerId', 'siteId', 'date', 'isPresent', 'advancePaid', 'ownerId']) && data.keys().size() == 6;
+    }
+
+    function isValidProgressPhoto(data) {
+      return data.url is string && data.url.size() <= 1000 &&
+             isValidId(data.siteId) &&
+             data.caption is string && data.caption.size() <= 500 &&
+             data.timestamp is string &&
+             data.ownerId == request.auth.uid &&
+             data.keys().hasAll(['url', 'siteId', 'caption', 'timestamp', 'ownerId']) && data.keys().size() == 5;
+    }
+
+    // Rules for Collections
+    match /test/connection {
+      allow get: if true;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasAny(['language', 'rates', 'displayName']) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['language', 'rates', 'displayName']);
+    }
+
+    match /sites/{siteId} {
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSite(incoming());
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && 
+                    isValidSite(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'address']);
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /laborers/{laborerId} {
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidLaborer(incoming());
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && 
+                    isValidLaborer(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'dailyRate']);
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /attendance/{logId} {
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidAttendanceLog(incoming()) &&
+                    exists(/databases/$(database)/documents/sites/$(incoming().siteId)) &&
+                    get(/databases/$(database)/documents/sites/$(incoming().siteId)).data.ownerId == request.auth.uid &&
+                    exists(/databases/$(database)/documents/laborers/$(incoming().laborerId)) &&
+                    get(/databases/$(database)/documents/laborers/$(incoming().laborerId)).data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && 
+                    isValidAttendanceLog(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['isPresent', 'advancePaid']);
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /photos/{photoId} {
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidProgressPhoto(incoming()) &&
+                    exists(/databases/$(database)/documents/sites/$(incoming().siteId)) &&
+                    get(/databases/$(database)/documents/sites/$(incoming().siteId)).data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && 
+                    isValidProgressPhoto(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['caption']);
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Namma-Mistri Construction Assistant",
+  "description": "A rugged 'Site Calculator' and construction management tool for builders. Includes material estimation, labor diaries, and progress tracking with multi-language support (English/Kannada).",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "Material Calculations",
+    "Labor Management",
+    "Photo Progress Tracking"
+  ]
+}

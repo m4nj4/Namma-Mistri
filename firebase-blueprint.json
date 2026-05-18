@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user settings and default material rates.",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "language": { "type": "string", "enum": ["en", "kn"] },
+        "rates": {
+          "type": "object",
+          "properties": {
+            "brick": { "type": "number" },
+            "cement": { "type": "number" },
+            "sand": { "type": "number" }
+          }
+        }
+      },
+      "required": ["language", "rates"]
+    },
+    "Site": {
+      "title": "Construction Site",
+      "description": "Represents a specific building project.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId", "createdAt"]
+    },
+    "Laborer": {
+      "title": "Laborer Info",
+      "description": "Details about a specific team member.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "dailyRate": { "type": "number" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["name", "dailyRate", "ownerId"]
+    },
+    "AttendanceLog": {
+      "title": "Daily Attendance & Advance",
+      "description": "Logs attendance and any advance payments for a laborer at a site.",
+      "type": "object",
+      "properties": {
+        "laborerId": { "type": "string" },
+        "siteId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "isPresent": { "type": "boolean" },
+        "advancePaid": { "type": "number" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["laborerId", "siteId", "date", "isPresent", "ownerId"]
+    },
+    "ProgressPhoto": {
+      "title": "Site Photo",
+      "description": "Visual tracking of site progress.",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "siteId": { "type": "string" },
+        "caption": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["url", "siteId", "timestamp", "ownerId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private user profiles and settings."
+    },
+    "/sites/{siteId}": {
+      "schema": "Site",
+      "description": "All construction sites."
+    },
+    "/laborers/{laborerId}": {
+      "schema": "Laborer",
+      "description": "Mistri's team of laborers."
+    },
+    "/attendance/{logId}": {
+      "schema": "AttendanceLog",
+      "description": "Centralized attendance logs."
+    },
+    "/photos/{photoId}": {
+      "schema": "ProgressPhoto",
+      "description": "Progress photos for all sites."
+    }
+  }
+}
