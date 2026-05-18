@@ -1,20 +1,26 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🧱 Namma-Mistri (ನಮ್ಮ ಮಿಸ್ತ್ರಿ)
+### Your Smart Construction Assistant
 
-# Run and deploy your AI Studio app
+Namma-Mistri is an Android app built for rural masons (Mistris) in India 
+to help them professionally manage construction sites — right from their phone.
 
-This contains everything you need to run your app locally.
+## 🔨 Features
+- 📐 **Material Calculator** — Enter wall dimensions, get exact Bricks, Cement & Sand needed
+- 👷 **Labor Diary** — Track daily attendance, advances & auto-calculate balance due
+- 📸 **Site Photos** — Document work progress to share with house owners
+- 💰 **Standard Rates** — Maintain local material prices, user-updated
 
-View your app in AI Studio: https://ai.studio/apps/8973b0d8-d664-426b-82fb-bdfcafb04829
+## 🎯 Problem it Solves
+Masons in rural India have no tools to estimate materials accurately — 
+leading to wastage or project halts. Namma-Mistri brings precision 
+and professionalism to the grassroots construction worker.
 
-## Run Locally
+## 🛠️ Tech Stack
+- **Language:** Java / Kotlin (Android)
+- **Database:** Room DB
+- **UI:** Tabbed Layout — Calculator | Team | Photos
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 🌍 Impact
+- Reduces material wastage through accurate estimation
+- Brings financial discipline to labor wage tracking
+- Professionalizes rural construction work
